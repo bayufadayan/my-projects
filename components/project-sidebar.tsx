@@ -2,9 +2,9 @@
 
 import { Project, ProjectType, ProjectPlatform } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { LayoutGrid, Pin, Tag, Monitor } from 'lucide-react';
+import { LayoutGrid, Pin, Tag, Monitor, Globe, EyeOff } from 'lucide-react';
 
-export type FilterValue = 'all' | 'featured' | `type:${string}` | `platform:${string}`;
+export type FilterValue = 'all' | 'featured' | 'deployed' | 'undeployed' | `type:${string}` | `platform:${string}`;
 
 interface ProjectSidebarProps {
   projectTypes: ProjectType[];
@@ -60,6 +60,8 @@ export function ProjectSidebar({
 }: ProjectSidebarProps) {
   const allCount = projects.length;
   const featuredCount = projects.filter((p) => p.featured).length;
+  const deployedCount = projects.filter((p) => !!p.liveUrl).length;
+  const undeployedCount = projects.filter((p) => !p.liveUrl).length;
 
   return (
     <nav className={cn('flex flex-col gap-1', className)}>
@@ -80,6 +82,20 @@ export function ProjectSidebar({
         count={featuredCount}
         active={activeFilter === 'featured'}
         onClick={() => onFilterChange('featured')}
+      />
+      <NavItem
+        icon={<Globe className="h-4 w-4" />}
+        label="Deployed"
+        count={deployedCount}
+        active={activeFilter === 'deployed'}
+        onClick={() => onFilterChange('deployed')}
+      />
+      <NavItem
+        icon={<EyeOff className="h-4 w-4" />}
+        label="Not Deployed"
+        count={undeployedCount}
+        active={activeFilter === 'undeployed'}
+        onClick={() => onFilterChange('undeployed')}
       />
 
       {projectTypes.length > 0 && (

@@ -245,6 +245,8 @@ export default function Home() {
             const filtered = projects.filter((p) => {
               if (activeFilter === 'all') return true;
               if (activeFilter === 'featured') return p.featured;
+              if (activeFilter === 'deployed') return !!p.liveUrl;
+              if (activeFilter === 'undeployed') return !p.liveUrl;
               if (activeFilter.startsWith('type:')) return p.typeId === activeFilter.slice(5);
               if (activeFilter.startsWith('platform:')) return p.platformIds?.includes(activeFilter.slice(9));
               return true;

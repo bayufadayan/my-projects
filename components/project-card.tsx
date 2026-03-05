@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Project } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ExternalLink, Trash2, Edit2, Github, Pin, PinOff } from 'lucide-react';
+import { ExternalLink, Trash2, Edit2, Github, Pin, PinOff, Activity, Loader2 } from 'lucide-react';
+
+type UrlStatus = 'idle' | 'checking' | 'active' | 'inactive';
 
 interface ProjectCardProps {
   project: Project;
@@ -13,6 +16,20 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, onEdit, onDelete, onToggleFeatured }: ProjectCardProps) {
+  const [urlStatus, setUrlStatus] = useState<UrlStatus>('idle');
+
+  const checkStatus = async () => {
+    if (!project.liveUrl || urlStatus === 'checking') return;
+    setUrlStatus('checking');
+    try {
+      const res = await fetch(`/api/check-url?url=${encodeURIComponent(project.liveUrl)}`);
+      const data = await res.json();
+      setUrlStatus(data.active ? 'active' : 'inactive');
+    } catch {
+      setUrlStatus('inactive');
+    }
+  };
+
   return (
     <Card className={`flex flex-col gap-4 p-6 transition-all hover:shadow-lg ${project.featured ? 'ring-2 ring-primary' : ''}`}>
       <div className="flex flex-col gap-2">
@@ -62,14 +79,44 @@ export function ProjectCard({ project, onEdit, onDelete, onToggleFeatured }: Pro
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {project.liveUrl && (
-          <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm" className="gap-2">
-              <ExternalLink className="h-4 w-4" />
-              Live
+          <>
+            <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm" className="gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Live
+              </Button>
+            </a>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={checkStatus}
+              disabled={urlStatus === 'checking'}
+              title="Check if site is active"
+            >
+              {urlStatus === 'checking' ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Activity className="h-3.5 w-3.5" />
+              )}
+              {urlStatus === 'idle' && 'Check'}
+              {urlStatus === 'checking' && 'Checking...'}
+              {urlStatus === 'active' && (
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  Active
+                </span>
+              )}
+              {urlStatus === 'inactive' && (
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                  Down
+                </span>
+              )}
             </Button>
-          </a>
+          </>
         )}
         {project.githubUrl && (
           <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">

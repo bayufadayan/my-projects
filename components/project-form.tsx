@@ -247,11 +247,13 @@ export function ProjectForm({ initialData, projectTypes, projectPlatforms, onSub
 
   const handleBack = () => setStep((s) => s - 1);
 
-  const handleFinalSubmit = form.handleSubmit((data) => onSubmit(buildPayload(data)));
+  const handleFinalSubmit = () => {
+    form.handleSubmit((data) => onSubmit(buildPayload(data)))();
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={(e) => { e.preventDefault(); if (isLastStep) handleFinalSubmit(e); }} className="space-y-5">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
         <StepIndicator current={step} total={STEPS.length} />
 
         {step === 0 && (
@@ -324,7 +326,7 @@ export function ProjectForm({ initialData, projectTypes, projectPlatforms, onSub
               Next
             </Button>
           ) : (
-            <Button type="submit" disabled={isLoading} className="flex-1">
+            <Button type="button" onClick={handleFinalSubmit} disabled={isLoading} className="flex-1">
               {isLoading ? 'Saving...' : 'Add Project'}
             </Button>
           )}
