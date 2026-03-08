@@ -183,7 +183,7 @@ export default function Home() {
       <div className="mx-auto flex max-w-7xl gap-0 px-4 sm:px-6 lg:px-8">
         {/* Desktop sidebar */}
         <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-0 py-12 pr-6">
+          <div className="sticky top-0 flex max-h-screen flex-col overflow-y-auto py-12 pr-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <ProjectSidebar
               projectTypes={projectTypes}
               projectPlatforms={projectPlatforms}
