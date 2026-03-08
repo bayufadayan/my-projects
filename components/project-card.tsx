@@ -4,18 +4,19 @@ import { useState } from 'react';
 import { Project } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ExternalLink, Trash2, Edit2, Github, Pin, PinOff, Activity, Loader2 } from 'lucide-react';
+import { ExternalLink, Trash2, Edit2, Github, Pin, PinOff, Activity, Loader2, Layers } from 'lucide-react';
 
 type UrlStatus = 'idle' | 'checking' | 'active' | 'inactive';
 
 interface ProjectCardProps {
   project: Project;
+  supportingProjects?: Project[];
   onEdit: (project: Project) => void;
   onDelete: (id: string) => void;
   onToggleFeatured: (id: string, featured: boolean) => void;
 }
 
-export function ProjectCard({ project, onEdit, onDelete, onToggleFeatured }: ProjectCardProps) {
+export function ProjectCard({ project, supportingProjects, onEdit, onDelete, onToggleFeatured }: ProjectCardProps) {
   const [urlStatus, setUrlStatus] = useState<UrlStatus>('idle');
 
   const checkStatus = async () => {
@@ -76,6 +77,23 @@ export function ProjectCard({ project, onEdit, onDelete, onToggleFeatured }: Pro
               {tag}
             </span>
           ))}
+        </div>
+      )}
+
+      {supportingProjects && supportingProjects.length > 0 && (
+        <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
+          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <Layers className="h-3.5 w-3.5" />
+            Supporting Projects
+          </div>
+          <ul className="space-y-0.5">
+            {supportingProjects.map((sp) => (
+              <li key={sp.id} className="flex items-center gap-1.5 text-sm text-foreground">
+                <span className="h-1 w-1 rounded-full bg-primary" />
+                {sp.title}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

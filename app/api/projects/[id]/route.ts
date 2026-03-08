@@ -14,13 +14,14 @@ export async function PUT(
     await sql`
       UPDATE projects
       SET
-        title       = ${body.title},
-        description = ${body.description ?? null},
-        live_url    = ${body.liveUrl ?? null},
-        github_url  = ${body.githubUrl ?? null},
-        tags        = ${body.tags ?? null},
-        featured    = ${body.featured ?? false},
-        type_id     = ${body.typeId ?? null}
+        title           = ${body.title},
+        description     = ${body.description ?? null},
+        live_url        = ${body.liveUrl ?? null},
+        github_url      = ${body.githubUrl ?? null},
+        tags            = ${body.tags ?? null},
+        featured        = ${body.featured ?? false},
+        type_id         = ${body.typeId ?? null},
+        main_project_id = ${body.mainProjectId ?? null}
       WHERE id = ${id}
     `;
 

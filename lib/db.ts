@@ -92,6 +92,16 @@ async function _runInit() {
       PRIMARY KEY (project_id, platform_id)
     )
   `;
+
+  // Migration: self-reference for support-type projects pointing to a main project
+  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS main_project_id TEXT REFERENCES projects(id) ON DELETE SET NULL`;
+
+  // Ensure 'support' project type exists
+  await sql`
+    INSERT INTO project_type (id, title, description, created_at)
+    VALUES ('support', 'Support', 'Project pendukung untuk project utama', ${Date.now()})
+    ON CONFLICT (id) DO NOTHING
+  `;
 }
 
 export default sql;

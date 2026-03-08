@@ -9,9 +9,12 @@ export async function GET() {
       SELECT
         p.id, p.title, p.description, p.live_url, p.github_url,
         p.tags, p.created_at, p.featured, p.type_id,
-        pt.title AS type_name
+        pt.title AS type_name,
+        p.main_project_id,
+        mp.title AS main_project_title
       FROM projects p
       LEFT JOIN project_type pt ON pt.id = p.type_id
+      LEFT JOIN projects mp ON mp.id = p.main_project_id
       ORDER BY p.created_at DESC
     `;
 
@@ -43,6 +46,8 @@ export async function GET() {
       typeName: r.type_name ?? undefined,
       platformIds: platformsByProject[r.id]?.ids,
       platformNames: platformsByProject[r.id]?.names,
+      mainProjectId: r.main_project_id ?? undefined,
+      mainProjectTitle: r.main_project_title ?? undefined,
     }));
     return NextResponse.json(projects);
   } catch (error) {
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
     const featured = body.featured ?? false;
 
     await sql`
-      INSERT INTO projects (id, title, description, live_url, github_url, tags, created_at, featured, type_id)
+      INSERT INTO projects (id, title, description, live_url, github_url, tags, created_at, featured, type_id, main_project_id)
       VALUES (
         ${id},
         ${body.title},
@@ -70,7 +75,8 @@ export async function POST(request: Request) {
         ${body.tags ?? null},
         ${createdAt},
         ${featured},
-        ${body.typeId ?? null}
+        ${body.typeId ?? null},
+        ${body.mainProjectId ?? null}
       )
     `;
 

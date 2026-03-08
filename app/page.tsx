@@ -87,6 +87,9 @@ export default function Home() {
                   platformNames: data.platformIds
                     ?.map((id) => projectPlatforms.find((pl) => pl.id === id)?.title)
                     .filter(Boolean) as string[] | undefined,
+                  mainProjectTitle: data.mainProjectId
+                    ? projects.find((p) => p.id === data.mainProjectId)?.title
+                    : undefined,
                 }
               : p
           )
@@ -106,6 +109,9 @@ export default function Home() {
           platformNames: newProject.platformIds
             ?.map((id) => projectPlatforms.find((pl) => pl.id === id)?.title)
             .filter(Boolean) as string[] | undefined,
+          mainProjectTitle: newProject.mainProjectId
+            ? projects.find((p) => p.id === newProject.mainProjectId)?.title
+            : undefined,
         };
         setProjects((prev) => [enriched, ...prev]);
       }
@@ -180,6 +186,7 @@ export default function Home() {
           <div className="sticky top-0 py-12 pr-6">
             <ProjectSidebar
               projectTypes={projectTypes}
+              projectPlatforms={projectPlatforms}
               projects={projects}
               activeFilter={activeFilter}
               onFilterChange={setActiveFilter}
@@ -258,6 +265,17 @@ export default function Home() {
             const pinned = sorted.filter((p) => p.featured);
             const rest = sorted.filter((p) => !p.featured);
 
+            // Build supporting-projects map for main-type projects
+            const supportingProjectsMap: Record<string, Project[]> = {};
+            for (const p of projects) {
+              if (p.typeId === 'support' && p.mainProjectId) {
+                if (!supportingProjectsMap[p.mainProjectId]) {
+                  supportingProjectsMap[p.mainProjectId] = [];
+                }
+                supportingProjectsMap[p.mainProjectId].push(p);
+              }
+            }
+
             if (filtered.length === 0) {
               return (
                 <div className="rounded-lg border border-border bg-card p-12 text-center">
@@ -279,6 +297,7 @@ export default function Home() {
                         <ProjectCard
                           key={project.id}
                           project={project}
+                          supportingProjects={supportingProjectsMap[project.id]}
                           onEdit={handleEditProject}
                           onDelete={handleDeleteClick}
                           onToggleFeatured={handleToggleFeatured}
@@ -302,6 +321,7 @@ export default function Home() {
                       <ProjectCard
                         key={project.id}
                         project={project}
+                        supportingProjects={supportingProjectsMap[project.id]}
                         onEdit={handleEditProject}
                         onDelete={handleDeleteClick}
                         onToggleFeatured={handleToggleFeatured}
@@ -328,6 +348,7 @@ export default function Home() {
             initialData={selectedProject || undefined}
             projectTypes={projectTypes}
             projectPlatforms={projectPlatforms}
+            mainProjects={projects.filter((p) => p.typeId === 'main')}
             onSubmit={handleFormSubmit}
             onCancel={() => {
               setIsFormOpen(false);

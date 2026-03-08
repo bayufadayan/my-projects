@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Project, ProjectType, ProjectPlatform } from '@/lib/types';
@@ -34,6 +34,7 @@ const projectSchema = z.object({
   liveUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   githubUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   tags: z.string().optional(),
+  mainProjectId: z.string().optional(),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -42,7 +43,8 @@ interface ProjectFormProps {
   initialData?: Project;
   projectTypes: ProjectType[];
   projectPlatforms: ProjectPlatform[];
-  onSubmit: (data: Omit<Project, 'id' | 'createdAt' | 'typeName' | 'platformNames'> & { id?: string; createdAt?: number }) => void;
+  mainProjects: Project[];
+  onSubmit: (data: Omit<Project, 'id' | 'createdAt' | 'typeName' | 'platformNames' | 'mainProjectTitle'> & { id?: string; createdAt?: number }) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -82,7 +84,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
   );
 }
 
-export function ProjectForm({ initialData, projectTypes, projectPlatforms, onSubmit, onCancel, isLoading }: ProjectFormProps) {
+export function ProjectForm({ initialData, projectTypes, projectPlatforms, mainProjects, onSubmit, onCancel, isLoading }: ProjectFormProps) {
   const isEdit = !!initialData;
   const [step, setStep] = useState(0);
 
@@ -96,9 +98,13 @@ export function ProjectForm({ initialData, projectTypes, projectPlatforms, onSub
       liveUrl: initialData?.liveUrl || '',
       githubUrl: initialData?.githubUrl || '',
       tags: initialData?.tags?.join(', ') || '',
+      mainProjectId: initialData?.mainProjectId || '',
     },
     mode: 'onTouched',
   });
+
+  const watchedTypeId = useWatch({ control: form.control, name: 'typeId' });
+  const isSupport = watchedTypeId === 'support';
 
   const buildPayload = (data: ProjectFormData) => ({
     id: initialData?.id,
@@ -113,7 +119,36 @@ export function ProjectForm({ initialData, projectTypes, projectPlatforms, onSub
     tags: data.tags
       ? data.tags.split(',').map((t) => t.trim()).filter(Boolean)
       : undefined,
+    mainProjectId: data.typeId === 'support' ? (data.mainProjectId || undefined) : undefined,
   });
+
+  const MainProjectField = () => (
+    <FormField
+      control={form.control}
+      name="mainProjectId"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Project Utama <span className="text-destructive">*</span></FormLabel>
+          <Select onValueChange={field.onChange} value={field.value}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih project yang di-support..." />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {mainProjects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormDescription>Pilih project main yang di-support oleh project ini</FormDescription>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
 
   const TypeSelectField = () => (
     <FormField
@@ -204,6 +239,7 @@ export function ProjectForm({ initialData, projectTypes, projectPlatforms, onSub
             </FormItem>
           )} />
           <TypeSelectField />
+          {isSupport && <MainProjectField />}
           <PlatformsField />
           <FormField control={form.control} name="liveUrl" render={({ field }) => (
             <FormItem>
@@ -274,6 +310,7 @@ export function ProjectForm({ initialData, projectTypes, projectPlatforms, onSub
               </FormItem>
             )} />
             <TypeSelectField />
+            {isSupport && <MainProjectField />}
             <PlatformsField />
           </>
         )}

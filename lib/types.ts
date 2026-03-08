@@ -24,4 +24,6 @@ export interface Project {
   typeName?: string;        // populated via JOIN
   platformIds?: string[];   // populated via join on platform_link
   platformNames?: string[]; // populated via join on platform_link
+  mainProjectId?: string;   // for support-type projects: points to the main project
+  mainProjectTitle?: string;// populated via JOIN
 }
