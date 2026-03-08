@@ -22,7 +22,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Plus, SlidersHorizontal } from 'lucide-react';
+import { Plus, SlidersHorizontal, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -36,6 +37,7 @@ export default function Home() {
   const [isFetching, setIsFetching] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterValue>('all');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load projects and project types from database on mount
   useEffect(() => {
@@ -235,6 +237,25 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Search bar */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
         {projects.length === 0 ? (
           <div className="rounded-lg border border-border bg-card p-12 text-center">
             <p className="mb-4 text-lg font-medium text-foreground">No projects yet</p>
@@ -250,12 +271,29 @@ export default function Home() {
           (() => {
             // Apply filter
             const filtered = projects.filter((p) => {
-              if (activeFilter === 'all') return true;
-              if (activeFilter === 'featured') return p.featured;
-              if (activeFilter === 'deployed') return !!p.liveUrl;
-              if (activeFilter === 'undeployed') return !p.liveUrl;
-              if (activeFilter.startsWith('type:')) return p.typeId === activeFilter.slice(5);
-              if (activeFilter.startsWith('platform:')) return p.platformIds?.includes(activeFilter.slice(9));
+              const matchesFilter = (() => {
+                if (activeFilter === 'all') return true;
+                if (activeFilter === 'featured') return p.featured;
+                if (activeFilter === 'deployed') return !!p.liveUrl;
+                if (activeFilter === 'undeployed') return !p.liveUrl;
+                if (activeFilter.startsWith('type:')) return p.typeId === activeFilter.slice(5);
+                if (activeFilter.startsWith('platform:')) return p.platformIds?.includes(activeFilter.slice(9));
+                return true;
+              })();
+
+              if (!matchesFilter) return false;
+
+              if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase();
+                return (
+                  p.title.toLowerCase().includes(q) ||
+                  (p.description?.toLowerCase().includes(q) ?? false) ||
+                  (p.typeName?.toLowerCase().includes(q) ?? false) ||
+                  (p.tags?.some((t) => t.toLowerCase().includes(q)) ?? false) ||
+                  (p.platformNames?.some((n) => n.toLowerCase().includes(q)) ?? false)
+                );
+              }
+
               return true;
             });
 
